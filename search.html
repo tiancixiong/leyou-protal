@@ -284,21 +284,27 @@
             <div class="details">
                 <div class="sui-navbar">
                     <div class="navbar-inner filter">
+                        <!--排序字段-->
                         <ul class="sui-nav">
-                            <li class="active">
+                            <li :class="{active:!search.sortBy}" @click="search.sortBy=''">
                                 <a href="#">综合</a>
                             </li>
                             <li>
                                 <a href="#">销量</a>
                             </li>
-                            <li>
+                            <li @click="search.sortBy='createTime'" :class="{active: search.sortBy==='createTime'}">
                                 <a href="#">新品</a>
                             </li>
                             <li>
                                 <a href="#">评价</a>
                             </li>
-                            <li>
-                                <a href="#">价格</a>
+                            <li @click="search.sortBy='price'; search.descending = !search.descending"
+                                :class="{active: search.sortBy==='price'}">
+                                <a href="#">
+                                    价格
+                                    <v-icon v-show="search.descending">arrow_drop_down</v-icon>
+                                    <v-icon v-show="!search.descending">arrow_drop_up</v-icon>
+                                </a>
                             </li>
                         </ul>
                         <div class="top-pagination">
@@ -489,17 +495,25 @@
             totalPage: 0 // 总页数
         },
         created() {
+            // 判断是否有请求参数
+            if (!location.search) {
+                return;
+            }
             // 获取请求参数并转化为对象
             const search = ly.parse(location.search.substring(1));
             // 对page进行初始化，防止第一次访问时page为空
             search.page = search.page ? parseInt(search.page) : 1;
-            // 保存到vue本地
+            // 对排序进行初始化，默认为""，代表不排序
+            search.sortBy = search.sortBy || "";
+            // 对排序方式初始化，转为布尔值
+            search.descending = search.descending === "true" || false;
+            // 记录在本地的search
             this.search = search;
-            // 加载后台数据
-            this.loadData();
+            // 请求后台，根据条件搜索
+            this.searchFromServer();
         },
         methods: {
-            loadData() {
+            searchFromServer() {
                 // 发起异步请求
                 ly.http.post("/search/page", this.search).then(({data}) => {
                     if (data.items.length === 0) {
