@@ -302,10 +302,10 @@
                             </li>
                         </ul>
                         <div class="top-pagination">
-                            <span>共 <i style="color: #222;">7600+</i> 商品</span>
-                            <span><i style="color: red;">2</i>/123</span>
-                            <a class="btn-arrow" href="#" style="display: inline-block">&lt;</a>
-                            <a class="btn-arrow" href="#" style="display: inline-block">&gt;</a>
+                            <span>共 <i style="color: #222;">{{total}}+</i> 商品</span>
+                            <span><i style="color: red;">{{search.page}}</i>/{{totalPage}}</span>
+                            <a class="btn-arrow" @click="prevPage" style="display: inline-block">&lt;</a>
+                            <a class="btn-arrow" @click="nextPage" style="display: inline-block">&gt;</a>
                         </div>
                     </div>
                 </div>
@@ -338,12 +338,14 @@
                                 <div class="attr">
                                     <em>
                                         <!--                                        <a :title="goods.selected.title">{{(goods.selected.title).length>20?goods.selected.title.substring(0,20)+"...":goods.selected.title}}</a>-->
-                                        {{goods.selected.title.length > 20 ? goods.selected.title.substring(0,20) + "..." : goods.selected.title}}
+                                        {{goods.selected.title.length > 20 ? goods.selected.title.substring(0,20) +
+                                        "..." : goods.selected.title}}
                                     </em>
                                 </div>
                                 <div class="cu">
                                     <em>
-                                        <span>促</span>{{goods.subTitle.length > 20 ? goods.subTitle.substring(0,20) + "..." : goods.subTitle}}
+                                        <span>促</span>{{goods.subTitle.length > 20 ? goods.subTitle.substring(0,20) +
+                                        "..." : goods.subTitle}}
                                     </em>
                                 </div>
                                 <div class="commit">
@@ -358,36 +360,29 @@
                         </li>
                     </ul>
                 </div>
-                <div class="fr">
+                <!--分页工具条-->
+                <div class="fr page">
                     <div class="sui-pagination pagination-large">
-                        <ul>
-                            <li class="prev disabled">
-                                <a href="#">«上一页</a>
+                        <ul style="width: 550px">
+                            <li :class="{prev:true,disabled:search.page === 1}">
+                                <a @click="prevPage">«上一页</a>
                             </li>
-                            <li class="active">
-                                <a href="#">1</a>
+                            <li :class="{active: index(i) === search.page}" v-for="i in Math.min(5,totalPage)" :key="i">
+                                <a @click="search.page=index(i)">{{index(i)}}</a>
                             </li>
-                            <li>
-                                <a href="#">2</a>
-                            </li>
-                            <li>
-                                <a href="#">3</a>
-                            </li>
-                            <li>
-                                <a href="#">4</a>
-                            </li>
-                            <li>
-                                <a href="#">5</a>
-                            </li>
-                            <li class="dotted"><span>...</span></li>
-                            <li class="next">
-                                <a href="#">下一页»</a>
+                            <li class="dotted" v-show="totalPage > 5"><span>...</span></li>
+                            <li :class="{next:true,disabled:search.page === totalPage}">
+                                <a @click="nextPage">下一页»</a>
                             </li>
                         </ul>
-                        <div><span>共10页&nbsp;</span><span>
-      到第
-      <input type="text" class="page-num">
-      页 <button class="page-confirm" onclick="alert(1)">确定</button></span></div>
+                        <div>
+                            <span>共{{totalPage}}页&nbsp;</span>
+                            <span>
+                                到第
+                                <input type="text" class="page-num" :value="search.page">
+                                页 <button class="page-confirm" onclick="alert(1)">确定</button>
+                            </span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -487,36 +482,79 @@
             ly,
             search: {
                 key: "", // 搜索页面的关键字
+                page: 1
             },
-            goodsList: [] // 接收搜索得到的结果
+            goodsList: [], // 接收搜索得到的结果
+            total: 0, // 总条数
+            totalPage: 0 // 总页数
         },
         created() {
-            // 判断是否有请求参数
-            if (!location.search) {
-                return;
-            }
-            // 将请求参数转为对象
+            // 获取请求参数并转化为对象
             const search = ly.parse(location.search.substring(1));
-            // 记录在data的search对象中
+            // 对page进行初始化，防止第一次访问时page为空
+            search.page = search.page ? parseInt(search.page) : 1;
+            // 保存到vue本地
             this.search = search;
-
-            // 发起请求，根据条件搜索
+            // 加载后台数据
             this.loadData();
         },
         methods: {
             loadData() {
                 // 发起异步请求
                 ly.http.post("/search/page", this.search).then(({data}) => {
-                    // 处理结果集数据
+                    if (data.items.length === 0) {
+                        return
+                    }
+                    this.total = data.total;
+                    this.totalPage = data.totalPage;
+
+                    // 初始化sku信息
                     data.items.forEach(goods => {
                         // 转换skus：把字符串转变为对象
                         goods.skus = JSON.parse(goods.skus);
-                        // 添加默认选中项
+                        // 添加默认选中项，默认第一个sku被选中
                         goods.selected = goods.skus[0];
                     });
                     // 初始化goodsList
                     this.goodsList = data.items;
                 });
+            },
+            // 计算页面上显示的页码按钮，每次显示五个按钮，当前页按钮应居中显示
+            index(i) {
+                if (this.search.page <= 3 || this.totalPage <= 5) {
+                    // 如果当前页小于等于3或者总页数小于等于5
+                    return i;
+                } else if (this.search.page > 3) {
+                    // 如果当前页大于3
+                    return this.search.page - 3 + i;
+                } else {
+                    return this.totalPage - 5 + i;
+                }
+            },
+            // 上一页
+            prevPage() {
+                if (this.search.page > 1) {
+                    this.search.page--
+                }
+            },
+            // 下一页
+            nextPage() {
+                if (this.search.page < this.totalPage) {
+                    this.search.page++
+                }
+            }
+        },
+        watch: {
+            search: {
+                deep: true,
+                handler(val, old) {
+                    if (!old || !old.key) {
+                        // 如果旧的search值为空，或者search中的key为空，证明是第一次
+                        return;
+                    }
+                    // 把search对象变成请求参数，拼接在url路径
+                    window.location.href = "http://www.leyou.com/search.html?" + ly.stringify(val);
+                }
             }
         },
         components: {
