@@ -120,18 +120,20 @@
                 </ul>
                 <div class="clearfix"></div>
             </div>
-            <!--selector-->
+            <!--selector 过滤项列表-->
             <div class="clearfix selector">
-                <div class="type-wrap" v-for="(f,i) in filters" :key="i" v-if="f.k !== '品牌'" v-show="i<5||show">
+                <div class="type-wrap" v-for="(f,i) in remainFilters" :key="i" v-if="f.k !== '品牌'" v-show="i<5||show">
                     <div class="fl key">{{f.k}}</div>
                     <div class="fl value">
                         <ul class="type-list">
                             <li v-for="(option, j) in f.options" :key="j" @click="selectFilter(f.k, option)">
-                                <a>{{option.name}}</a>
+                                <a href="javascript:void(0);">{{option.name + (f.unit||'')}}</a>
                             </li>
                         </ul>
                     </div>
-                    <div class="fl ext"></div>
+                    <div class="fl ext">
+                        <a href="javascript:void(0);" class="sui-btn">多选</a>
+                    </div>
                 </div>
                 <div class="type-wrap logo" v-else>
                     <div class="fl key brand">{{f.k}}</div>
@@ -376,7 +378,7 @@
             totalPage: 0, // 总页数
             filters: [], // 过滤参数集合
             show: false, // 是否展开更多过滤条件
-            breads: []
+            breads: [] // 三级商品分类，面包屑数据
         },
         created() {
             // 判断是否有请求参数
@@ -489,6 +491,20 @@
                     return this.filters.find(f => f.k === 'brandId').options[0].name;
                 }
                 return v;
+            }
+        },
+        // 计算属性
+        computed: {
+            // 隐藏已选择的过滤项
+            remainFilters() {
+                const keys = Object.keys(this.search.filter);
+                if (this.search.filter.cid3) {
+                    keys.push("分类")
+                }
+                if (this.search.filter.brandId) {
+                    keys.push("品牌")
+                }
+                return this.filters.filter(f => !keys.includes(f.k) && f.options.length > 1);
             }
         },
         watch: {
