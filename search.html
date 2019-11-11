@@ -115,7 +115,7 @@
                 <ul class="tags-choose">
                     <li class="tag" v-for="(v,k) in search.filter" v-if="k != 'cid3'" :key="k">
                         {{k === 'brandId' ? '品牌' : k}}:<span style="color: red">{{getFilterValue(k,v)}}</span>
-                        <i class="sui-icon icon-tb-close"></i>
+                        <i class="sui-icon icon-tb-close" @click="removeFilter(k)"></i>
                     </li>
                 </ul>
                 <div class="clearfix"></div>
@@ -478,7 +478,7 @@
                 obj.filter[k] = o.name || o;
                 this.search = obj;
             },
-
+            // 展示已选的过滤项
             getFilterValue(k, v) {
                 // 如果没有过滤参数，我们跳过展示
                 if (!this.filters || this.filters.length === 0) {
@@ -491,6 +491,10 @@
                     return this.filters.find(f => f.k === 'brandId').options[0].name;
                 }
                 return v;
+            },
+            // 删除过滤项
+            removeFilter(k) {
+                this.search.filter[k] = null;
             }
         },
         // 计算属性
