@@ -124,7 +124,7 @@
             </div>
             <!--selector-->
             <div class="clearfix selector">
-                <div class="type-wrap" v-for="(f,i) in filters" :key="i" v-if="f.k !== '品牌'">
+                <div class="type-wrap" v-for="(f,i) in filters" :key="i" v-if="f.k !== '品牌'" v-show="i<5||show">
                     <div class="fl key">{{f.k}}</div>
                     <div class="fl value">
                         <ul class="type-list">
@@ -150,6 +150,16 @@
                     <div class="fl ext">
                         <a href="javascript:void(0);" class="sui-btn">多选</a>
                     </div>
+                </div>
+                <div class="type-wrap" style="text-align: center">
+                    <v-btn small flat @click="show=true" v-show="!show">
+                        更多
+                        <v-icon>arrow_drop_down</v-icon>
+                    </v-btn>
+                    <v-btn small="" flat @click="show=false" v-show="show">
+                        收起
+                        <v-icon>arrow_drop_up</v-icon>
+                    </v-btn>
                 </div>
             </div>
             <!--details-->
@@ -365,7 +375,8 @@
             goodsList: [], // 接收搜索得到的结果
             total: 0, // 总条数
             totalPage: 0, // 总页数
-            filters: [] // 过滤参数集合
+            filters: [], // 过滤参数集合
+            show: false // 是否展开更多过滤条件
         },
         created() {
             // 判断是否有请求参数
