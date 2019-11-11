@@ -113,12 +113,8 @@
                 </ul>
                 <!--已选择过滤项-->
                 <ul class="tags-choose">
-                    <li class="tag">
-                        品牌:<span style="color: red">apple</span>
-                        <i class="sui-icon icon-tb-close"></i>
-                    </li>
-                    <li class="tag">
-                        内存:<span style="color: red">4G</span>
+                    <li class="tag" v-for="(v,k) in search.filter" v-if="k != 'cid3'" :key="k">
+                        {{k === 'brandId' ? '品牌' : k}}:<span style="color: red">{{getFilterValue(k,v)}}</span>
                         <i class="sui-icon icon-tb-close"></i>
                     </li>
                 </ul>
@@ -379,7 +375,8 @@
             total: 0, // 总条数
             totalPage: 0, // 总页数
             filters: [], // 过滤参数集合
-            show: false // 是否展开更多过滤条件
+            show: false, // 是否展开更多过滤条件
+            breads: []
         },
         created() {
             // 判断是否有请求参数
@@ -478,6 +475,20 @@
                 }
                 obj.filter[k] = o.name || o;
                 this.search = obj;
+            },
+
+            getFilterValue(k, v) {
+                // 如果没有过滤参数，我们跳过展示
+                if (!this.filters || this.filters.length === 0) {
+                    return null;
+                }
+                let filter = null;
+                // 判断是否是品牌
+                if (k === 'brandId') {
+                    // 返回品牌名称
+                    return this.filters.find(f => f.k === 'brandId').options[0].name;
+                }
+                return v;
             }
         },
         watch: {
