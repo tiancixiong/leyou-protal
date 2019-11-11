@@ -106,8 +106,10 @@
                 <!--面包屑-->
                 <ul class="fl sui-breadcrumb">
                     <li><span>全部结果:</span></li>
-                    <li><a href="#">手机</a></li>
-                    <li><span>手机通讯</span></li>
+                    <li v-for="(c,i) in breads" :key="i">
+                        <a href="#" v-if="i < 2">{{c.name}}</a>
+                        <span v-else>{{c.name}}</span>
+                    </li>
                 </ul>
                 <!--已选择过滤项-->
                 <ul class="tags-choose">
@@ -128,7 +130,7 @@
                     <div class="fl key">{{f.k}}</div>
                     <div class="fl value">
                         <ul class="type-list">
-                            <li v-for="(option, j) in f.options" :key="j">
+                            <li v-for="(option, j) in f.options" :key="j" @click="selectFilter(f.k, option)">
                                 <a>{{option.name}}</a>
                             </li>
                         </ul>
@@ -139,10 +141,10 @@
                     <div class="fl key brand">{{f.k}}</div>
                     <div class="value logos">
                         <ul class="logo-list">
-                            <li v-for="(option, j) in f.options" v-if="option.image">
+                            <li v-for="(option, j) in f.options" v-if="option.image" @click="selectFilter(f.k, option)">
                                 <img :src="option.image"/>
                             </li>
-                            <li style="text-align: center" v-else>
+                            <li style="text-align: center" v-else @click="selectFilter(f.k, option)">
                                 <a style="line-height: 30px; font-size: 12px" href="#">{{option.name}}</a>
                             </li>
                         </ul>
@@ -370,7 +372,8 @@
             ly,
             search: {
                 key: "", // 搜索页面的关键字
-                page: 1
+                page: 1,
+                filter: {} // 发送到后台的过滤项
             },
             goodsList: [], // 接收搜索得到的结果
             total: 0, // 总条数
@@ -391,6 +394,8 @@
             search.sortBy = search.sortBy || "";
             // 对排序方式初始化，转为布尔值
             search.descending = search.descending === "true" || false;
+            // 对过滤对象进行初始化
+            search.filter = search.filter || {};
             // 记录在本地的search
             this.search = search;
             // 请求后台，根据条件搜索
@@ -417,6 +422,12 @@
                     this.goodsList = data.items;
                     this.total = data.total;
                     this.totalPage = data.totalPage;
+                    // 初始化商品分类过滤参数
+                    if (data.categories.length === 1) {
+                        // 如果只有1个，那么就查询三级商品分类，展示到面包屑
+                        ly.http.get("/item/category/all/level?id=" + data.categories[0].id)
+                            .then(resp => this.breads = resp.data);
+                    }
                     // 初始化分类过滤项
                     this.filters.push({
                         k: "分类",
@@ -457,6 +468,16 @@
                 if (this.search.page < this.totalPage) {
                     this.search.page++
                 }
+            },
+            // 点击过滤项，将过滤项保存到搜索条件中
+            selectFilter(k, o) {
+                const obj = {};
+                Object.assign(obj, this.search);
+                if (k === '分类' || k === '品牌') {
+                    o = o.id;
+                }
+                obj.filter[k] = o.name || o;
+                this.search = obj;
             }
         },
         watch: {
