@@ -416,6 +416,11 @@
                         k: "品牌",
                         options: data.brands
                     });
+                    // 初始化其他参数
+                    data.specs.forEach(spec => {
+                        spec.options = spec.options.map(o => ({name: o}));
+                        this.filters.push(spec);
+                    });
                 });
             },
             // 计算页面上显示的页码按钮，每次显示五个按钮，当前页按钮应居中显示
