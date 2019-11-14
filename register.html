@@ -21,7 +21,8 @@
             float: right;
             margin-left: 10px
         }
-        .code-span:hover{
+
+        .code-span:hover {
             background-color: #c0ccda;
         }
     </style>
@@ -96,7 +97,7 @@
                 <div class="control-group">
                     <label class="control-label"></label>
                     <div class="controls btn-reg">
-                        <a class="sui-btn btn-block btn-xlarge btn-danger" href="javascript:void(0)" target="_blank"
+                        <a class="sui-btn btn-block btn-xlarge btn-danger" href="javascript:void(0)"
                            @click.stop="submit"
                         >完成注册</a>
                     </div>
@@ -186,7 +187,7 @@
             createVerifyCode() {// 生成短信验证码
                 this.$validator.validate("phone").then(r => {
                     if (r) {
-                        leyou.http.post("/user/send", "phone=" + this.user.phone);
+                        leyou.http.post("/user/code", "phone=" + this.user.phone);
                     }
                 });
 
