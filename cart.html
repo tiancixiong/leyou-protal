@@ -39,10 +39,10 @@
                     <div class="yui3-u-1-8">操作</div>
                 </div>
                 <div class="cart-item-list">
-
                     <div class="cart-body">
+                        <!-- 购物车商品列表 -->
                         <div class="cart-list">
-                            <ul class="goods-list yui3-g" v-for="(cart, i) in carts" :key="i">
+                            <ul class="goods-list yui3-g" v-for="(cart, index) in carts" :key="index">
                                 <li class="yui3-u-1-24">
                                     <input type="checkbox" name="" v-model="selected" :value="cart"/>
                                 </li>
@@ -51,10 +51,10 @@
                                         <div class="item-img"><img :src="cart.image" width="80px" height="80px"/>
                                         </div>
                                         <div class="item-msg">
-												<span style="line-height:70px ">
+												<span style="line-height:70px">
 													{{cart.title}} <br/>
-                                                    <span v-for="(v, k) in cart.ownSpec"
-                                                          :key="k">{{v}}<br/></span>
+                                                    <span v-for="(val, key, index) in JSON.parse(cart.ownSpec)"
+                                                          :key="key">{{val}}&emsp;</span>
 												</span>
                                         </div>
                                     </div>
@@ -72,14 +72,13 @@
                                     <span style="line-height:70px " class="sum">{{ly.formatPrice(cart.price * cart.num)}}</span>
                                 </li>
                                 <li class="yui3-u-1-8">
-                                    <a href="#none" @click="deleteCart(i)">删除</a><br/>
+                                    <a href="#none" @click="deleteCart(index)">删除</a><br/>
                                     <a href="#none">移到我的关注</a>
                                 </li>
                             </ul>
                         </div>
                     </div>
                 </div>
-
             </div>
             <div class="cart-tool">
                 <div class="select-all">
@@ -280,9 +279,12 @@
         methods: {
             loadCarts() {
                 // 先判断登录状态
-                ly.verifyUser().then(() => {
+                ly.verifyUser().then(res => {
                     // 已登录
-
+                    ly.http.get("/cart").then(({data}) => {
+                        this.carts = data;
+                        this.selected = data;
+                    });
                 }).catch(() => {
                     // 未登录
                     this.carts = ly.store.get("carts") || [];
@@ -290,23 +292,25 @@
                 })
             },
             // 增加购物车数量
-            increment(c) {
-                c.num++;
+            increment(cart) {
+                cart.num++;
                 ly.verifyUser().then(() => {
-                    // TODO 已登录，向后台发起请求
+                    // 已登录，向后台发起请求
+                    ly.http.put("/cart", {skuId: cart.skuId, num: cart.num});
                 }).catch(() => {
                     // 未登录，直接操作本地数据
                     ly.store.set("carts", this.carts);
                 })
             },
             // 减小购物车数量
-            decrement(c) {
-                if (c.num <= 1) {
+            decrement(cart) {
+                if (cart.num <= 1) {
                     return;
                 }
-                c.num--;
+                cart.num--;
                 ly.verifyUser().then(() => {
-                    // TODO 已登录，向后台发起请求
+                    // 已登录，向后台发起请求
+                    ly.http.put("/cart", {skuId: cart.skuId, num: cart.num});
                 }).catch(() => {
                     // 未登录，直接操作本地数据
                     ly.store.set("carts", this.carts);
@@ -315,7 +319,10 @@
             // 删除购物车中的商品
             deleteCart(i) {
                 ly.verifyUser().then(res => {
-                    // TODO，已登录购物车
+                    // 已登录，向后台发起请求
+                    ly.http.delete("/cart/" + this.carts[i].skuId).then(() => {
+                        this.carts.splice(i, 1);
+                    });
                 }).catch(() => {
                     // 未登录购物车
                     this.carts.splice(i, 1);
