@@ -42,31 +42,37 @@
 
                     <div class="cart-body">
                         <div class="cart-list">
-                            <ul class="goods-list yui3-g">
+                            <ul class="goods-list yui3-g" v-for="(cart, i) in carts" :key="i">
                                 <li class="yui3-u-1-24">
-                                    <input type="checkbox" name="" value="" />
+                                    <input type="checkbox" name="" v-model="selected" :value="cart"/>
                                 </li>
                                 <li class="yui3-u-11-24">
                                     <div class="good-item">
-                                        <div class="item-img"><img src="img/goods.png" width="80px" height="80px"/></div>
+                                        <div class="item-img"><img :src="cart.image" width="80px" height="80px"/>
+                                        </div>
                                         <div class="item-msg">
 												<span style="line-height:70px ">
-													Apple Macbook Air 13.3英寸笔记本电脑 银色（Corei5）处理器/8GB内存
-														尺寸：13.3英寸
+													{{cart.title}} <br/>
+                                                    <span v-for="(v, k) in cart.ownSpec"
+                                                          :key="k">{{v}}<br/></span>
 												</span>
                                         </div>
                                     </div>
                                 </li>
 
-                                <li class="yui3-u-1-8"><span style="line-height:70px " class="price">8848.00</span></li>
-                                <li class="yui3-u-1-8" style="padding-top: 20px">
-                                    <a href="javascript:void(0)" class="increment mins">-</a>
-                                    <input autocomplete="off" type="text" value="1" minnum="1" class="itxt" />
-                                    <a href="javascript:void(0)" class="increment plus">+</a>
+                                <li class="yui3-u-1-8"><span style="line-height:70px " class="price">{{ly.formatPrice(cart.price)}}</span>
                                 </li>
-                                <li class="yui3-u-1-8"><span style="line-height:70px " class="sum">8848.00</span></li>
+                                <li class="yui3-u-1-8" style="padding-top: 20px">
+                                    <a href="javascript:void(0)" class="increment mins" @click="decrement(cart)">-</a>
+                                    <input autocomplete="off" type="text" value="1" v-model="cart.num" minnum="1"
+                                           class="itxt"/>
+                                    <a href="javascript:void(0)" class="increment plus" @click="increment(cart)">+</a>
+                                </li>
                                 <li class="yui3-u-1-8">
-                                    <a href="#none">删除</a><br />
+                                    <span style="line-height:70px " class="sum">{{ly.formatPrice(cart.price * cart.num)}}</span>
+                                </li>
+                                <li class="yui3-u-1-8">
+                                    <a href="#none" @click="deleteCart(i)">删除</a><br/>
                                     <a href="#none">移到我的关注</a>
                                 </li>
                             </ul>
@@ -88,11 +94,11 @@
                 <div class="toolbar">
                     <div class="chosed">已选择<span>0</span>件商品</div>
                     <div class="sumprice">
-                        <span><em>总价（不含运费） ：</em><i class="summoney">8848.00</i></span>
+                        <span><em>总价（不含运费） ：</em><i class="summoney">{{totalPrice}}</i></span>
                         <span><em>已节省：</em><i>-¥20.00</i></span>
                     </div>
                     <div class="sumbtn">
-                        <a class="sum-btn"  href="getOrderInfo.html"  target="_blank">结算</a>
+                        <a class="sum-btn" href="getOrderInfo.html" target="_blank">结算</a>
                     </div>
                 </div>
             </div>
@@ -264,6 +270,63 @@
     var cartVm = new Vue({
         el: "#cartApp",
         data: {
+            ly,
+            carts: [], // 购物车数据
+            selected: [] // 记录选中的商品
+        },
+        created() {
+            this.loadCarts();
+        },
+        methods: {
+            loadCarts() {
+                // 先判断登录状态
+                ly.verifyUser().then(() => {
+                    // 已登录
+
+                }).catch(() => {
+                    // 未登录
+                    this.carts = ly.store.get("carts") || [];
+                    this.selected = this.carts;
+                })
+            },
+            // 增加购物车数量
+            increment(c) {
+                c.num++;
+                ly.verifyUser().then(() => {
+                    // TODO 已登录，向后台发起请求
+                }).catch(() => {
+                    // 未登录，直接操作本地数据
+                    ly.store.set("carts", this.carts);
+                })
+            },
+            // 减小购物车数量
+            decrement(c) {
+                if (c.num <= 1) {
+                    return;
+                }
+                c.num--;
+                ly.verifyUser().then(() => {
+                    // TODO 已登录，向后台发起请求
+                }).catch(() => {
+                    // 未登录，直接操作本地数据
+                    ly.store.set("carts", this.carts);
+                })
+            },
+            // 删除购物车中的商品
+            deleteCart(i) {
+                ly.verifyUser().then(res => {
+                    // TODO，已登录购物车
+                }).catch(() => {
+                    // 未登录购物车
+                    this.carts.splice(i, 1);
+                    ly.store.set("carts", this.carts);
+                })
+            }
+        },
+        computed: {
+            totalPrice() {
+                return ly.formatPrice(this.selected.reduce((c1, c2) => c1 + c2.num * c2.price, 0));
+            }
         },
         components: {
             shortcut: () => import("/js/pages/shortcut.js")
