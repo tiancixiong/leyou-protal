@@ -106,7 +106,25 @@
                         colorLight: "#ffffff",
                         correctLevel: QRCode.CorrectLevel.H
                     });
-                })
+                });
+                // 开启定时任务，查询付款状态
+                const taskId = setInterval(() => {
+                    ly.http.get("/order/state/" + this.orderId)
+                        .then(resp => {
+                            let i = resp.data;
+                            if (i === 1) {
+                                // 付款成功
+                                clearInterval(taskId);
+                                // 跳转到付款成功页
+                                location.href = "/paysuccess.html?orderId=" + this.orderId;
+                            } else if (i === 2) {
+                                // 付款失败
+                                clearInterval(taskId);
+                                // 跳转到付款失败页
+                                location.href = "/payfail.html";
+                            }
+                        })
+                }, 3000);
             }).catch(() => {
                 // 未登录，跳转至登录页
                 location.href = "http://www.leyou.com/login.html?returnUrl=" + location.href;
