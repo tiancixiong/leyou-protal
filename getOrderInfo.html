@@ -287,12 +287,22 @@
                             }
                         );
                         // 提交订单
-						ly.http.post("/order", this.order).then(({data}) => {
-							// 在线支付，需要到付款页
-							window.location = "http://www.leyou.com/pay.html?orderId=" + data;
-						}).catch((resp) => {
-							alert("订单提交失败，可能是缺货!")
-						});
+                        ly.http.post("/order", this.order,
+                            {
+                                transformResponse: [ // 对响应进行处理的回调
+                                    function (data) {
+                                        // 不对data做任何处理，直接返回
+                                        return data;
+                                    }
+                                ]
+                            }
+                        )
+                            .then(({data}) => {
+                                // 在线支付，需要到付款页
+                                window.location = "http://www.leyou.com/pay.html?orderId=" + data;
+                            }).catch((resp) => {
+                            alert("订单提交失败，可能是缺货!")
+                        });
                     }).catch(() => {
                         // 未登录
                         window.location.href = "http://www.leyou.com/login.html?returnUrl=" + window.location.href;
