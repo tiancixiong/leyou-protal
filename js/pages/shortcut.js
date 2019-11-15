@@ -9,7 +9,7 @@ const shortcut = {
                </li>\
                <li v-else class='f-item'> \
                    请<a href='javascript:void(0)' @click='gotoLogin'>登录</a>　 \
-                   <span><a href='register.html' target='_blank'>免费注册</a></span> \
+                   <span><a href='http://www.leyou.com/register.html' target='_blank'>免费注册</a></span> \
                </li> \
            </ul> \
            <ul class='fr'> \
@@ -52,7 +52,7 @@ const shortcut = {
     },
     methods: {
         gotoLogin() {
-            window.location = "login.html?returnUrl=" + window.location;
+            window.location = "http://www.leyou.com/login.html?returnUrl=" + window.location;
         }
     }
 }

@@ -91,13 +91,13 @@
                     <a href="#none">清除下柜商品</a>
                 </div>
                 <div class="toolbar">
-                    <div class="chosed">已选择<span>0</span>件商品</div>
+                    <div class="chosed">已选择<span><i class="number">{{totalNum}}</i></span>件商品</div>
                     <div class="sumprice">
                         <span><em>总价（不含运费） ：</em><i class="summoney">{{totalPrice}}</i></span>
                         <span><em>已节省：</em><i>-¥20.00</i></span>
                     </div>
                     <div class="sumbtn">
-                        <a class="sum-btn" href="getOrderInfo.html" target="_blank">结算</a>
+                        <a class="sum-btn" href="#" @click.prevent="toOrderInfo" target="_blank">结算</a>
                     </div>
                 </div>
             </div>
@@ -328,9 +328,26 @@
                     this.carts.splice(i, 1);
                     ly.store.set("carts", this.carts);
                 })
+            },
+            // 跳转到结算(支付)页
+            toOrderInfo() {
+                // 判断是否登录
+                ly.verifyUser().then(() => {
+                    // 已登录
+                    // 保存已选购物车记录放到localStorage
+                    ly.store.set("LY_SELECTED", this.selected);
+                    // 跳转到订单页面
+                    window.location.href = "http://www.leyou.com/getOrderInfo.html"
+                }).catch(() => {
+                    // 未登录
+                    window.location.href = "http://www.leyou.com/login.html?returnUrl=" + window.location.href;
+                })
             }
         },
         computed: {
+            totalNum() {
+                return this.selected.reduce((c1, c2) => c1 + c2.num, 0);
+            },
             totalPrice() {
                 return ly.formatPrice(this.selected.reduce((c1, c2) => c1 + c2.num * c2.price, 0));
             }
