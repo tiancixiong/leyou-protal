@@ -116,12 +116,12 @@
                                 // 付款成功
                                 clearInterval(taskId);
                                 // 跳转到付款成功页
-                                location.href = "/paysuccess.html?orderId=" + this.orderId;
+                                location.href = "http://www.leyou.com/paysuccess.html?orderId=" + this.orderId;
                             } else if (i === 2) {
                                 // 付款失败
                                 clearInterval(taskId);
                                 // 跳转到付款失败页
-                                location.href = "/payfail.html";
+                                location.href = "http://www.leyou.com/payfail.html";
                             }
                         })
                 }, 3000);
